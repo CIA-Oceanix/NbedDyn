@@ -62,7 +62,7 @@ def train_NbedDyn_model_L63(params,model,modelRINN,X_train,Grad_t):
         z = torch.from_numpy(Grad_t).float()
         
         
-        criterion = torch.nn.MSELoss(reduction='elementwise_mean')
+        criterion = torch.nn.MSELoss(reduction='none')
         
         if params['pretrained'] :
             modelRINN.load_state_dict(torch.load(path + file_name +'.pt'))
@@ -82,9 +82,9 @@ def train_NbedDyn_model_L63(params,model,modelRINN,X_train,Grad_t):
                 if params['get_latent_train']:
                     aug_inp_data.append(aug_inp.detach())
                 # Compute and print loss
-                loss1 = criterion(grad[:,:1], z[b,:,:])
-                loss2 = criterion(pred[:-1,1:] , aug_inp[1:,1:])
-                loss3 = criterion(pred2[:-1,1:] , pred[1:,1:])
+                loss1 = criterion(grad[:,:1], z[b,:,:]).mean()
+                loss2 = criterion(pred[:-1,1:] , aug_inp[1:,1:]).sum()
+                loss3 = criterion(pred2[:-1,1:] , pred[1:,1:]).sum()
                 loss =  0.1*loss1+0.9*loss2 + 0.9*loss3
                 if t%1000==0:
                     print('Training L63 NbedDyn model', t,loss)
@@ -108,9 +108,9 @@ def train_NbedDyn_model_L63(params,model,modelRINN,X_train,Grad_t):
                 inp_concat = torch.cat((x[b,:,:], modelRINN.Dyn_net.y_aug[b,:,:]), dim=1)
                 pred, grad, inp, aug_inp = modelRINN(inp_concat,dt)
                 # Compute and print loss
-                loss1 = criterion(grad[:,:1], z[b,:,:])
-                loss2 = criterion(pred[:-1,:1] , aug_inp[1:,:1])
-                loss3 = criterion(pred[:-1,1:] , aug_inp[1:,1:])
+                loss1 = criterion(grad[:,:1], z[b,:,:]).mean()
+                loss2 = criterion(pred[:-1,:1] , aug_inp[1:,:1]).sum()
+                loss3 = criterion(pred[:-1,1:] , aug_inp[1:,1:]).sum()
                 loss =  0.0*loss1+1.0*loss2 + 1.0*loss3
                 if t%1000==0:
                     print('Training L63 NbedDyn model', t,loss)
@@ -128,7 +128,7 @@ def train_NbedDyn_model_SLA(params,model,modelRINN,X_train,Grad_t):
         z = torch.from_numpy(Grad_t).float()
         
         
-        criterion = torch.nn.MSELoss(reduction='elementwise_mean')
+        criterion = torch.nn.MSELoss(reduction='none')
         
         if params['pretrained'] :
             modelRINN.load_state_dict(torch.load(path + file_name+'.pt'))
@@ -146,8 +146,8 @@ def train_NbedDyn_model_SLA(params,model,modelRINN,X_train,Grad_t):
                 pred1, grad1, inp, aug_inp = modelRINN(inp_concat,dt)
                 if params['get_latent_train']:
                     aug_inp_data.append(aug_inp.detach())
-                loss1 = criterion(grad1[:,:params['dim_input']], z[b,:,:])
-                loss2 = criterion(pred1[:-1,:], inp_concat[1:,:])
+                loss1 = criterion(grad1[:,:params['dim_input']], z[b,:,:]).mean()
+                loss2 = criterion(pred1[:-1,:], inp_concat[1:,:]).sum()
                 loss = 0.9*loss1+0.1*loss2
                 if t%1000==0:
                         print('Training SLA NbedDyn model', t,loss)
@@ -163,7 +163,7 @@ def train_NbedDyn_model_Linear(params,model,modelRINN,X_train,Grad_t):
         z = torch.from_numpy(Grad_t).float()
         
         
-        criterion = torch.nn.MSELoss(reduction='elementwise_mean')
+        criterion = torch.nn.MSELoss(reduction='none')
         
         if params['pretrained'] :
             modelRINN.load_state_dict(torch.load(path + file_name+'.pt'))
@@ -182,8 +182,8 @@ def train_NbedDyn_model_Linear(params,model,modelRINN,X_train,Grad_t):
                 if params['get_latent_train']:
                     aug_inp_data.append(aug_inp.detach())
                 # Compute and print loss
-                loss1 = criterion(grad[:,:1], z[b,:,:])
-                loss2 = criterion(pred[:-1,:], aug_inp[1:,:])
+                loss1 = criterion(grad[:,:1], z[b,:,:]).mean()
+                loss2 = criterion(pred[:-1,:], aug_inp[1:,:]).sum()
                 loss = 1.0*loss1+1.0*loss2
                 if t%1000==0:
                        print('Training Linear NbedDyn model', t,loss)
